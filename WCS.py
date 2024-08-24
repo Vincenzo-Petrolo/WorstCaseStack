@@ -115,7 +115,6 @@ class CallGraph:
         :param self: a object used to store information about each function, results go here
         :param tu: name of the translation unit (e.g. for main.c, this would be 'main')
         """
-        print(tu[0:tu.index(".")] + obj_ext)
 
         for s in read_symbols(tu[0:tu.index(".")] + obj_ext):
 
@@ -200,8 +199,6 @@ class CallGraph:
                     fxn_name = m.group(2)
                     fxn_dict2 = self.find_fxn(tu, fxn_name)
                     if not fxn_dict2:
-                        pprint.pprint(self)
-                        print(f"Error locating function {fxn_name} in {tu}, optimized out/merged??")
                         continue
 
                     if fxn_name.startswith("_irq"):
@@ -226,13 +223,10 @@ class CallGraph:
                 # Take care of asm volatile stack pointer clobbering
                 sp = sp_clobber.match(line_)
                 
-                print(sp) if sp else None
 
                 if sp and last_fxn:
                     fxn_dict2 = self.find_fxn(tu, last_fxn)
                     if not fxn_dict2:
-                        pprint.pprint(self)
-                        print(f"Error locating function {last_fxn} in {tu}, optimized out/merged??")
                         continue
                     
                     # Get the group from the match
@@ -381,8 +375,10 @@ class CallGraph:
         if wcs > int(stack_size):
             print(f"Stack size is too small.  Required: {wcs}, Provided: {stack_size}")
             print(f"If {max_stack_irq_name} fires while in {max_stack_fxn_name}, the stack will overflow")
+            return -1
         else:
             print(f"Worst Case Stack Usage is {wcs} Bytes. Stack Size is {stack_size} Bytes")
+            return 0
 
 
     def print_all_fxns(self) -> None:
@@ -538,7 +534,9 @@ def main() -> None:
     call_graph.print_all_fxns()
 
     # Check for maximum stack usage
-    call_graph.check_stack_size()
+    exit_value = call_graph.check_stack_size()
+
+    sys.exit(exit_value)
 
 
 main()
