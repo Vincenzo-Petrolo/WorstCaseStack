@@ -122,7 +122,7 @@ class CallGraph:
         :param tu: name of the translation unit (e.g. for main.c, this would be 'main')
         """
 
-        for s in read_symbols(tu[0:tu.index(".")] + obj_ext):
+        for s in read_symbols(tu):
 
             if s.type == 'FUNC':
                 if s.binding == 'GLOBAL':
