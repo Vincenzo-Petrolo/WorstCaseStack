@@ -10,7 +10,7 @@ This version was slightly modified to account for two reasons:
 - The original script was not able to handle the case where the stack pointer was clobbered using asm volatile instructions.
 - The original script was not able to handle irq functions.
 
-Usage: python WCS.py <directory> <maximum_stack_size>
+Usage: python WCS.py <directory> <.elf main file> <maximum_stack_size>
 
 Author: Nicolas Hery - http://nicolashery.com
         Vincenzo Petrolo <vincenzo.petrolo@polito.it>
@@ -31,7 +31,13 @@ obj_ext = '.elf'
 manual_ext = '.msu'
 read_elf_path = os.getenv("CROSS_COMPILE", "") + "readelf"
 stdout_encoding = "utf-8"  # System dependant
-stack_size = sys.argv[2]
+
+if (len(sys.argv) != 4):
+    print("Usage: python WCS.py <directory> <.elf main file> <maximum_stack_size>")
+    sys.exit(-1)
+
+elf_file = sys.argv[2]
+stack_size = sys.argv[3]
 
 
 class Printable:
@@ -498,12 +504,7 @@ def main() -> None:
     call_graph: CallGraph = CallGraph()
     tu_list, manual_list = find_files(rtl_ext, dir)
 
-    # Get the common base name for the tu_list
-    common_base = os.path.commonprefix(tu_list)
-    # Get the basename
-    common_base = common_base[0:common_base.rindex(".")]
-
-    tu = common_base + obj_ext
+    tu = elf_file
 
     # Read the input file
     call_graph.read_obj(tu)  # This must be first
