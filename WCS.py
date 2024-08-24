@@ -293,7 +293,7 @@ class CallGraph:
         def validate_dict(d):
             if not ('calls' in d and 'has_ptr_call' in d and 'local_stack' in d
                     and 'name' in d and 'tu' in d):
-                print(f"Error data is missing in fxn dictionary {d}")
+                print(f"Error data is missing in fxn dictionary {d}. Optimized/Merged?")
 
         # Loop through every global and local function
         # and resolve each call, save results in r_calls
