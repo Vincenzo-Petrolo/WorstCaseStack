@@ -9,11 +9,8 @@ This program is used to do static stack analysis on C source code to determine t
 
 ```
 gcc -c -fdump-rtl-dfinish -fstack-usage main.c my_library.c other.c
-wcs.py
+python wcs.py <directory> <max_stack_size>
 ```
-
-**Note:** When running `wcs.py` the current working directory must contain all the relevant input files.
-
 
 ## Dependencies
 1. This script requires python 3.  It was written and tested using version 3.6.2
@@ -24,15 +21,6 @@ resides in in the same folder as the gcc executable on your system.
 The script will search the current directory for sets of files with the names `<name>.o`, `<name>.su` and `<name>.c.<id>.dfinish`. If all three are found the script will calculate the worst case stack for every function in the translation unit `<name>.c`.  The value of `<id>` depends on the version of GCC you use and is auto-detected by the script.  In gcc 5.3.1, for example, the value of `<id>` is `270r`. 
 
 See the usage section for information about how to generate these files.
-
-## Inputs - Manual Stack Usage Files
-The scripts also look in files ending with *.msu.  These files should contain a whitespace delimited table with function names in the first column, and a decimal integer with the worst case stack usage in the second line 
-
-```
-my_function 20
-do_something 120
-__exit 144
-```
 
 Every line must contain a function / stack pair (empty lines are not permitted).  These files can be useful for specifying the worst case stack for functions for which the c-source is not available but the stack usage is known by other means such as inspecting the assembly or run-time testing.
 
@@ -52,11 +40,9 @@ definition in any of the given input files.
 ## Known Limitations:
 1. wcs.py can only determine stack usage from `*.c` source.  Calls to compiled libraries (e.g. libc.a) or to assembly functions will result in `unbounded` (e.g. unknown) stack usage.
 2. The actual worst case stack may be greater than reported by this function if outside actors modify the stack.  Common offenders are:
-    1. Interrupt handlers
+    1. Interrupt handlers (partially supported now if the interrupt handler function name starts by ```_irq```)
     2. Operating system context changes
-3. The use of inline assembly will result in potentially incorrect results.  Specifically, if a function uses inline assembly to load or store from the stack, modify the stack pointer, or branch to code that does likewise, expect incorrect results.  
-
-**The script has no way to detect situations 2 and 3.  In the presence of these conditions the script will still complete successfully.  Use caution.**
+3. The use of inline assembly will result in potentially incorrect results.  Specifically, if a function uses inline assembly to load or store from the stack, modify the stack pointer, or branch to code that does likewise, expect incorrect results. (partially supported now if the inline assembly changes the stack pointer by means of an ```add{i} sp, sp, <somevalue>``` instruction)
 
 ## Updates
 
@@ -68,3 +54,8 @@ definition in any of the given input files.
 ### April 25, 2018
 1. Added autodetection of the RTL extension (e.g. '270r')
 2. Added better error message
+
+### 24 August 2024
+1. Added support for interrupt handlers (functions starting with `_irq`)
+2. Added support for inline assembly that changes the stack pointer by means of an `add{i} sp, sp, <somevalue>` instruction
+3. Reading from a directory rather than having to move the script to the directory containing the files
